@@ -14,9 +14,10 @@ import (
 	"github.com/Azure/go-autorest/autorest/to"
 )
 
+// TODO: Parameterize these
 var (
 	groupName              = "your-azure-sample-group"
-	westus                 = "westus"
+	location               = "eastus2"
 	vNetName               = "vNet"
 	subnetName             = "subnet"
 	ipName                 = "pip"
@@ -63,7 +64,7 @@ func init() {
 func main() {
 	fmt.Println("Creating resource group")
 	resourceGroupParameters := resources.Group{
-		Location: &westus}
+		Location: &location}
 	_, err := groupClient.CreateOrUpdate(groupName, resourceGroupParameters)
 	onErrorFail(err, "CreateOrUpdate failed")
 
@@ -73,14 +74,14 @@ func main() {
 			Name: storage.StandardLRS,
 		},
 		Kind:     storage.Storage,
-		Location: &westus,
+		Location: &location,
 		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
 	}
 	_, errStorageAccount := accountClient.Create(groupName, storageAccountName, accountParameters, nil)
 
 	fmt.Println("Starting to create public IP address...")
 	pip := network.PublicIPAddress{
-		Location: &westus,
+		Location: &location,
 		PublicIPAddressPropertiesFormat: &network.PublicIPAddressPropertiesFormat{
 			PublicIPAllocationMethod: network.Static,
 			DNSSettings: &network.PublicIPAddressDNSSettings{
@@ -95,7 +96,7 @@ func main() {
 
 	fmt.Println("Starting to create load balancer...")
 	lb := network.LoadBalancer{
-		Location: &westus,
+		Location: &location,
 		LoadBalancerPropertiesFormat: &network.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: &[]network.FrontendIPConfiguration{
 				{
@@ -157,7 +158,7 @@ func main() {
 
 	fmt.Println("Starting to create virtual network...")
 	vNetParameters := network.VirtualNetwork{
-		Location: &westus,
+		Location: &location,
 		VirtualNetworkPropertiesFormat: &network.VirtualNetworkPropertiesFormat{
 			AddressSpace: &network.AddressSpace{
 				AddressPrefixes: &[]string{"10.0.0.0/16"},
@@ -181,7 +182,7 @@ func main() {
 
 	fmt.Println("Creating availability set")
 	availSet := compute.AvailabilitySet{
-		Location: &westus}
+		Location: &location}
 	availSet, err = availSetClient.CreateOrUpdate(groupName, "availSet", availSet)
 	onErrorFail(err, "CreateOrUpdate failed")
 
@@ -280,7 +281,7 @@ func buildID(subscriptionID, subType, subTypeName string) string {
 // buildNICparams returns a network.Interface struct with all needed fields included.
 func buildNICparams(subnetID *string, lb network.LoadBalancer, natRule int) network.Interface {
 	return network.Interface{
-		Location: &westus,
+		Location: &location,
 		InterfacePropertiesFormat: &network.InterfacePropertiesFormat{
 			IPConfigurations: &[]network.InterfaceIPConfiguration{
 				{
@@ -344,7 +345,7 @@ func createVM(vmName string, subnetID, availSetID, ipAddress *string, lb network
 // buildVMparams returns a network.VirtualMachine struct with all needed fields included.
 func buildVMparams(vmName string, nicID, availSetID *string) compute.VirtualMachine {
 	return compute.VirtualMachine{
-		Location: &westus,
+		Location: &location,
 		VirtualMachineProperties: &compute.VirtualMachineProperties{
 			OsProfile: &compute.OSProfile{
 				ComputerName:  &vmName,
