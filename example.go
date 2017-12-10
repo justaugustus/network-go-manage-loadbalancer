@@ -198,14 +198,19 @@ func main() {
 	onErrorFail(err, "createVM failed")
 
 	fmt.Println("Listing resources in resource group")
-	list, err := groupClient.ListResources(groupName, "", "", nil)
-	onErrorFail(err, "ListResources failed")
-	fmt.Printf("Resources in '%s' resource group\n", groupName)
-	for _, r := range *list.Value {
-		fmt.Printf("----------------\nName: %s\nType: %s\n",
-			*r.Name,
-			*r.Type)
-	}
+	/*
+		./example.go:201:26: groupClient.ListResources undefined (type resources.GroupsClient has no field or method ListResources)
+	*/
+	/*
+		list, err := groupClient.ListByResourceGroup(groupName, "", "", nil)
+		onErrorFail(err, "ListResources failed")
+		fmt.Printf("Resources in '%s' resource group\n", groupName)
+		for _, r := range *list.Value {
+			fmt.Printf("----------------\nName: %s\nType: %s\n",
+				*r.Name,
+				*r.Type)
+		}
+	*/
 
 	fmt.Println("Your load balancer and virtual machines have been created.")
 	fmt.Print("Press enter to delete the resources created in this sample...")
@@ -353,7 +358,11 @@ func buildVMparams(vmName string, nicID, availSetID *string) compute.VirtualMach
 				AdminPassword: to.StringPtr("Pa$$w0rd1975"),
 			},
 			HardwareProfile: &compute.HardwareProfile{
-				VMSize: compute.StandardDS1,
+				/*
+					./example.go:356:11: cannot use compute.StandardDS1 (type compute.ContainerServiceVMSizeTypes) as type compute.VirtualMachineSizeTypes in field value
+				*/
+				// TODO: Parameterize
+				VMSize: "StandardDS1",
 			},
 			StorageProfile: &compute.StorageProfile{
 				ImageReference: &compute.ImageReference{
@@ -363,9 +372,17 @@ func buildVMparams(vmName string, nicID, availSetID *string) compute.VirtualMach
 					Version:   to.StringPtr("latest"),
 				},
 				OsDisk: &compute.OSDisk{
-					Name:         to.StringPtr("osDisk"),
-					Caching:      compute.None,
-					CreateOption: compute.FromImage,
+					Name: to.StringPtr("osDisk"),
+					/*
+						./example.go:367:13: cannot use compute.None (type compute.AccessLevel) as type compute.CachingTypes in field value
+					*/
+					// TODO: Parameterize
+					Caching: "None",
+					/*
+						./example.go:368:18: cannot use compute.FromImage (type compute.DiskCreateOption) as type compute.DiskCreateOptionTypes in field value
+					*/
+					// TODO: Parameterize
+					CreateOption: "FromImage",
 					Vhd: &compute.VirtualHardDisk{
 						URI: to.StringPtr(buildVhdURI(storageAccountName, vmName)),
 					},
