@@ -91,6 +91,9 @@ func main() {
 				DomainNameLabel: to.StringPtr("domain-name"),
 			},
 		},
+		Sku: &network.PublicIPAddressSku{
+			Name: network.PublicIPAddressSkuNameStandard,
+		},
 	}
 	pipChan, errPIP := pipClient.CreateOrUpdate(groupName, ipName, pip, nil)
 	onErrorFail(<-errPIP, "CreateOrUpdate Public IP failed")
@@ -152,6 +155,9 @@ func main() {
 				buildNATrule("natRule1", subscriptionID, 21),
 				buildNATrule("natRule2", subscriptionID, 23),
 			},
+		},
+		Sku: &network.LoadBalancerSku{
+			Name: network.LoadBalancerSkuNameStandard,
 		},
 	}
 	lbChan, errLB := lbClient.CreateOrUpdate(groupName, loadBalancerName, lb, nil)
