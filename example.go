@@ -25,6 +25,7 @@ var (
 	backEndAddressPoolName = "backEndPool"
 	probeName              = "probe"
 	loadBalancerName       = "lb"
+	managedDiskName        = "osdisk"
 	storageAccountName     = "golangrocksonazure"
 	vmName1                = "Web1"
 	vmName2                = "Web2"
@@ -68,16 +69,18 @@ func main() {
 	_, err := groupClient.CreateOrUpdate(groupName, resourceGroupParameters)
 	onErrorFail(err, "CreateOrUpdate failed")
 
-	fmt.Println("Starting to create storage account...")
-	accountParameters := storage.AccountCreateParameters{
-		Sku: &storage.Sku{
-			Name: storage.StandardLRS,
-		},
-		Kind:     storage.Storage,
-		Location: &location,
-		AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
-	}
-	_, errStorageAccount := accountClient.Create(groupName, storageAccountName, accountParameters, nil)
+	/*
+		fmt.Println("Starting to create storage account...")
+		accountParameters := storage.AccountCreateParameters{
+			Sku: &storage.Sku{
+				Name: storage.StandardLRS,
+			},
+			Kind:     storage.Storage,
+			Location: &location,
+			AccountPropertiesCreateParameters: &storage.AccountPropertiesCreateParameters{},
+		}
+		_, errStorageAccount := accountClient.Create(groupName, storageAccountName, accountParameters, nil)
+	*/
 
 	fmt.Println("Starting to create public IP address...")
 	pip := network.PublicIPAddress{
@@ -185,10 +188,10 @@ func main() {
 		Location: &location}
 	availSet, err = availSetClient.CreateOrUpdate(groupName, "availSet", availSet)
 	onErrorFail(err, "CreateOrUpdate failed")
-
-	onErrorFail(<-errStorageAccount, "Create Storage Account failed")
-	fmt.Println("... storage account created")
-
+	/*
+		onErrorFail(<-errStorageAccount, "Create Storage Account failed")
+		fmt.Println("... storage account created")
+	*/
 	fmt.Printf("Creating virtual machine '%s'\n", vmName1)
 	err = createVM(vmName1, subnet.ID, availSet.ID, pip.IPAddress, lb, 0)
 	onErrorFail(err, "createVM failed")
@@ -197,11 +200,11 @@ func main() {
 	err = createVM(vmName2, subnet.ID, availSet.ID, pip.IPAddress, lb, 1)
 	onErrorFail(err, "createVM failed")
 
-	fmt.Println("Listing resources in resource group")
 	/*
 		./example.go:201:26: groupClient.ListResources undefined (type resources.GroupsClient has no field or method ListResources)
 	*/
 	/*
+		fmt.Println("Listing resources in resource group")
 		list, err := groupClient.ListByResourceGroup(groupName, "", "", nil)
 		onErrorFail(err, "ListResources failed")
 		fmt.Printf("Resources in '%s' resource group\n", groupName)
@@ -383,9 +386,16 @@ func buildVMparams(vmName string, nicID, availSetID *string) compute.VirtualMach
 					*/
 					// TODO: Parameterize
 					CreateOption: "FromImage",
-					Vhd: &compute.VirtualHardDisk{
-						URI: to.StringPtr(buildVhdURI(storageAccountName, vmName)),
+					ManagedDisk: &compute.ManagedDiskParameters{
+						ID: &managedDiskName,
+						// TODO: Parameterize
+						StorageAccountType: compute.StandardLRS,
 					},
+					/*
+						Vhd: &compute.VirtualHardDisk{
+							URI: to.StringPtr(buildVhdURI(storageAccountName, vmName)),
+						},
+					*/
 				},
 			},
 			NetworkProfile: &compute.NetworkProfile{
